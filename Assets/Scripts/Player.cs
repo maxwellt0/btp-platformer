@@ -6,7 +6,7 @@ public class Player : MonoBehaviour
 {
     public float moveSpeed;
     public Rigidbody2D rb;
-    private bool _isFacingRight = false;
+    private bool _isFacingRight = true;
     private bool _isGrounded;
     public Transform groundCheck;
     public float checkRadius;
@@ -31,38 +31,26 @@ public class Player : MonoBehaviour
     private void Update()
     {
         float input = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(input * moveSpeed, rb.velocity.y);
 
-        if (input > 0 && !_isFacingRight)
-        {
-            Flip();
-        }
-        else if (input < 0 && _isFacingRight) 
+        if ((input > 0 && !_isFacingRight) || input < 0 && _isFacingRight)
         {
             Flip();
         }
 
         _isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround);
-
+        _isTouchingFront = Physics2D.OverlapCircle(frontCheck.position, checkRadius, whatIsGround);
+        _wallSliding = _isTouchingFront && !_isGrounded && input != 0;
+        
+        rb.velocity = new Vector2(input * moveSpeed, rb.velocity.y);
+        
         if (Input.GetKeyDown(KeyCode.UpArrow) && _isGrounded)
         {
             rb.velocity = Vector2.up * jumpForce;
         }
 
-        _isTouchingFront = Physics2D.OverlapCircle(frontCheck.position, checkRadius, whatIsGround);
-
-        if (_isTouchingFront && _isGrounded == false && input != 0)
-        {
-            _wallSliding = true;
-        }
-        else
-        {
-            _wallSliding = false;
-        }
-
         if (_wallSliding)
         {
-            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, wallSlidingSpeed, float.MaxValue));
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlidingSpeed, float.MaxValue));
         }
 
         if (Input.GetKeyDown(KeyCode.UpArrow) && _wallSliding)
